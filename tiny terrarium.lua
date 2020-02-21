@@ -1,6 +1,28 @@
 -- tiny terrarium
 -- by helado de brownie
 
+-- # constants
+
+local simulation_dimension = 32
+
+local simulation_width, simulation_height = simulation_dimension, simulation_dimension
+
+local brushes = {
+    {label = 'tiny',    sprite = 2, width = 1,                  height = 1},
+    {label = 'small',   sprite = 3, width = 2,                  height = 2},
+    {label = 'medium',  sprite = 4, width = 3,                  height = 3},
+    {label = 'big',     sprite = 5, width = 4,                  height = 4},
+    {label = 'huge',    sprite = 6, width = 5,                  height = 5},
+    {label = 'column',  sprite = 7, width = 1,                  height = simulation_height},
+    {label = 'row',     sprite = 8, width = simulation_width,   height = 1},
+}
+
+local draw_scale = flr(128 / max(simulation_width, simulation_height))
+
+local screen_width, screen_height = draw_scale * simulation_width, draw_scale * simulation_height
+
+-- # etc.
+
 function _init()
     -- constants
 
@@ -23,64 +45,41 @@ function _init()
         erase       = 14,
     }
 
-    cap = 32
-
-    bdata = {
-        tiny    = {2,   1,      1},
-        small   = {3,   2,      2},
-        medium  = {4,   3,      3},
-        big     = {5,   4,      4},
-        huge    = {6,   5,      5},
-        column  = {7,   1,      cap},
-        row     = {8,   cap,    1},
-    }
-
-    scale = 128 / cap
-    cs = cap * scale
-
     -- state
 
-    grid = new_grid(cap, cap)
+    grid = new_grid(simulation_width, simulation_height)
     queue = {}
-    x, y = flr(cap / 2), flr(cap / 2)
+    x, y = flr(simulation_width / 2), flr(simulation_height / 2)
 
-    option = enum(
+    option = enum{
         'atom',
         'brush',
         'cursor speed',
         'cursor mode',
         'sim. speed',
-    nil)
+    }
 
-    atom = enum(
+    atom = enum{
         'block',
         'clay',
         'sand',
-    nil)
+    }
 
-    brush = enum(
-        'tiny',
-        'small',
-        'medium',
-        'big',
-        'huge',
-        'column',
-        'row',
-    nil)
+    brush = enum(brushes)
 
-    cspeed = enum('fast', 'slow')
+    cspeed = enum{'fast', 'slow'}
 
-    cmode = enum(
+    cmode = enum{
         'overwrite',
         'underwrite',
         'erase',
-    nil)
+    }
 
-    sspeed = enum(
+    sspeed = enum{
         'fast',
         'slow',
         'stop',
-    nil)
+    }
 
     simulator = cocreate(simulate)
     bug_rate = 4096
@@ -113,10 +112,10 @@ function _update60()
         if (b(1)) x += 1
         if (b(2)) y -= 1
         if (b(3)) y += 1
-        local bd = bdata[brush()]
-        local sx, sy = bd[2], bd[3]
-        x = mid(0, x, cap - sx)
-        y = mid(0, y, cap - sy)
+        local bd = brush()
+        local sx, sy = bd.width, bd.height
+        x = mid(0, x, simulation_width - sx)
+        y = mid(0, y, simulation_height - sy)
 
         if btn(5) then
             local a = atom()
@@ -142,7 +141,7 @@ function _draw()
 
     -- grid
 
-    sspr(0, 64, cap, cap, 0, 0, cs, cs)
+    sspr(0, 64, simulation_width, simulation_height, 0, 0, screen_width, screen_height)
 
     if btn(4) then
         -- options
@@ -162,8 +161,8 @@ function _draw()
             pal(7, 0)
             pal(5, acol[a])
             local br = brush()
-            spr(bdata[br][1], 71, 7)
-            print(br, 80, 9, 15)
+            spr(br.sprite, 71, 7)
+            print(br.label, 80, 9, 15)
             pal()
         elseif o == 'cursor speed' then
             local s = cspeed()
@@ -183,10 +182,10 @@ function _draw()
     else
         -- cursor
 
-        camera(-x * scale, -y * scale)
+        camera(-x * draw_scale, -y * draw_scale)
         color(7)
-        local bd = bdata[brush()]
-        local sx, sy = bd[2] * scale, bd[3] * scale
+        local bd = brush()
+        local sx, sy = bd.width * draw_scale, bd.height * draw_scale
         rect(-1, -1, sx, sy, 0)
     end
     camera()
@@ -209,8 +208,8 @@ function simulate()
             -- spawn bugs
 
             if flr(rnd(bug_rate)) == 0 then
-                local rx = flr(rnd(cap))
-                local ry = flr(rnd(cap))
+                local rx = flr(rnd(simulation_width))
+                local ry = flr(rnd(simulation_height))
                 if grid(rx, ry) == 'sand' then
                     grid:set(rx, ry, 'bug')
                     bug_rate /= 2
@@ -299,8 +298,7 @@ function order(x1, y1, x2, y2)
     })
 end
 
-function enum(...)
-    local t = {...}
+function enum(t)
     assert(#t > 0)
     local i = 1
     local m = {}
