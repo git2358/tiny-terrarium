@@ -24,6 +24,7 @@ local screen_width, screen_height = draw_scale * simulation_width, draw_scale * 
 function _init()
     -- constants
 
+    void_label = 'air'
     void_color = 12
 
     acol = {
@@ -187,6 +188,12 @@ function _draw()
         local bd = brush()
         local sx, sy = bd.width * draw_scale, bd.height * draw_scale
         rect(-1, -1, sx, sy, 0)
+
+        -- status bar
+
+        camera(0, -122)
+        color(7)
+        print(grid(x, y) or void_label)
     end
     camera()
 end
