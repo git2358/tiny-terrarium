@@ -3,9 +3,7 @@
 
 -- # constants
 
-local simulation_dimension = 32
-
-local simulation_width, simulation_height = simulation_dimension, simulation_dimension
+local simulation_width, simulation_height = 32, 30
 
 local brushes = {
     {label = 'tiny',    sprite = 2, width = 1,                  height = 1},
@@ -25,6 +23,8 @@ local screen_width, screen_height = draw_scale * simulation_width, draw_scale * 
 
 function _init()
     -- constants
+
+    void_color = 12
 
     acol = {
         block   = 5,
@@ -60,9 +60,9 @@ function _init()
     }
 
     atom = enum{
-        'block',
-        'clay',
         'sand',
+        'clay',
+        'block',
     }
 
     brush = enum(brushes)
@@ -137,7 +137,7 @@ end
 function _draw()
     -- background
 
-    cls(12)
+    cls()
 
     -- grid
 
@@ -218,9 +218,9 @@ function simulate()
         end
 
         yield()
+        yield()
 
         if ss == 'slow' then
-            yield()
             yield()
             yield()
         end
@@ -268,7 +268,7 @@ function new_grid(w, h)
 
     function r:set(x, y, v)
         es[xy_to_s(x, y)] = v
-        sset(x, y + 64, acol[v])
+        sset(x, y + 64, v == nil and void_color or acol[v])
     end
 
     function r:swap(x1, y1, x2, y2)
@@ -284,6 +284,12 @@ function new_grid(w, h)
 
     function r:is_air(x, y)
         return r:is_in_bounds(x, y) and r(x, y) == nil
+    end
+
+    for x = 0, w - 1 do
+        for y = 0, h - 1 do
+            r:set(x, y, nil)
+        end
     end
 
     return r
