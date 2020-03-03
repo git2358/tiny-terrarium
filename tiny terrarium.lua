@@ -262,7 +262,11 @@ function new_grid(w, h)
     local m = {}
 
     function m:__call(x, y)
-        return es[xy_to_s(x, y)]
+        if self:is_in_bounds(x, y) then
+            return es[xy_to_s(x, y)]
+        else
+            return nil
+        end
     end
 
     local r = setmetatable({}, m)
@@ -274,8 +278,10 @@ function new_grid(w, h)
     end
 
     function r:set(x, y, v)
-        es[xy_to_s(x, y)] = v
-        sset(x, y + 64, v == nil and void_color or acol[v])
+        if r:is_in_bounds(x, y) then
+            es[xy_to_s(x, y)] = v
+            sset(x, y + 64, v == nil and void_color or acol[v])
+        end
     end
 
     function r:swap(x1, y1, x2, y2)
@@ -290,7 +296,7 @@ function new_grid(w, h)
     end
 
     function r:is_air(x, y)
-        return r:is_in_bounds(x, y) and r(x, y) == nil
+        return r(x, y) == nil
     end
 
     for x = 0, w - 1 do
