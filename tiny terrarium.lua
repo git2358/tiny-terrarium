@@ -250,8 +250,7 @@ function iterate(p, x, y)
         local rx = choose{-1, 0, 1}
         local ry = choose{-1, 0, 1}
 
-        if r == 0 and grid:is_in_bounds(x + rx, y + ry) and
-        grid(x + rx, y + ry) ~= "block" then
+        if r == 0 and grid(x + rx, y + ry) ~= "block" then
             order(x, y, x + rx, y + ry)
         end
     end
